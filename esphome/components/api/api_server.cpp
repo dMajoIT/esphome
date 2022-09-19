@@ -255,11 +255,29 @@ void APIServer::on_number_update(number::Number *obj, float state) {
 #endif
 
 #ifdef USE_SELECT
-void APIServer::on_select_update(select::Select *obj, const std::string &state) {
+void APIServer::on_select_update(select::Select *obj, const std::string &state, size_t index) {
   if (obj->is_internal())
     return;
   for (auto &c : this->clients_)
     c->send_select_state(obj, state);
+}
+#endif
+
+#ifdef USE_LOCK
+void APIServer::on_lock_update(lock::Lock *obj) {
+  if (obj->is_internal())
+    return;
+  for (auto &c : this->clients_)
+    c->send_lock_state(obj, obj->state);
+}
+#endif
+
+#ifdef USE_MEDIA_PLAYER
+void APIServer::on_media_player_update(media_player::MediaPlayer *obj) {
+  if (obj->is_internal())
+    return;
+  for (auto &c : this->clients_)
+    c->send_media_player_state(obj);
 }
 #endif
 
@@ -273,6 +291,13 @@ void APIServer::send_homeassistant_service_call(const HomeassistantServiceRespon
     client->send_homeassistant_service_call(call);
   }
 }
+#ifdef USE_BLUETOOTH_PROXY
+void APIServer::send_bluetooth_le_advertisement(const BluetoothLEAdvertisementResponse &call) {
+  for (auto &client : this->clients_) {
+    client->send_bluetooth_le_advertisement(call);
+  }
+}
+#endif
 APIServer::APIServer() { global_api_server = this; }
 void APIServer::subscribe_home_assistant_state(std::string entity_id, optional<std::string> attribute,
                                                std::function<void(std::string)> f) {
